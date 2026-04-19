@@ -38,12 +38,12 @@ Client → API Gateway → Auth → Rate Limiter → Service Routing → Respons
 
 ## 🧱 Tech Stack
 
-* **Backend:** Node.js (Express / Fastify)
+* **Backend:** Node.js (Express)
 * **Cache & Rate Limiting:** Redis
-* **Database:** MongoDB / PostgreSQL
+* **Database:** PostgreSQL
 * **Authentication:** JWT + bcrypt
-* **Queue (optional):** BullMQ / RabbitMQ
-* **Containerization (optional):** Docker
+* **Queue :** RabbitMQ
+* **Containerization :** Docker
 
 ---
 
