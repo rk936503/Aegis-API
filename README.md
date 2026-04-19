@@ -19,9 +19,9 @@ This project demonstrates real-world backend engineering concepts used in modern
 * 🚦 **Distributed Rate Limiting** using Redis
 * 📊 **Request Logging & Monitoring**
 * 🔁 **Path Rewriting & Service Mapping**
-* ⚡ **Caching Layer (Redis)** *(optional)*
-* 🧵 **Asynchronous Job Processing** *(optional)*
-* 🛑 **Circuit Breaker for Fault Tolerance** *(optional)*
+* ⚡ **Caching Layer (Redis)**
+* 🧵 **Asynchronous Job Processing**
+* 🛑 **Circuit Breaker for Fault Tolerance**
 
 ---
 
@@ -38,12 +38,12 @@ Client → API Gateway → Auth → Rate Limiter → Service Routing → Respons
 
 ## 🧱 Tech Stack
 
-* **Backend:** Node.js (Express / Fastify)
+* **Backend:** Node.js (Express)
 * **Cache & Rate Limiting:** Redis
-* **Database:** MongoDB / PostgreSQL
+* **Database:** PostgreSQL
 * **Authentication:** JWT + bcrypt
-* **Queue (optional):** BullMQ / RabbitMQ
-* **Containerization (optional):** Docker
+* **Queue :** RabbitMQ
+* **Containerization :** Docker
 
 ---
 
@@ -126,7 +126,7 @@ node src/app.js
 
 ---
 
-## ⚡ Key Engineering Decisions
+## ⚡ Key Decisions
 
 * **Redis for rate limiting** → Fast in-memory operations
 * **JWT for authentication** → Stateless & scalable
