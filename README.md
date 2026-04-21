@@ -25,6 +25,14 @@ This project demonstrates real-world backend engineering concepts used in modern
 
 ---
 
+## 🚧 Progress
+
+- ✅ Phase 1: API Gateway with routing
+- ✅ Phase 2: Authentication (JWT + middleware)
+- ⏳ Phase 3: Rate Limiting (Redis)
+
+---
+
 ## 🧠 Architecture
 
 Client → API Gateway → Auth → Rate Limiter → Service Routing → Response
