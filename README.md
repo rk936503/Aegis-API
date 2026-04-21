@@ -27,8 +27,9 @@ This project demonstrates real-world backend engineering concepts used in modern
 
 ## 🚧 Progress
 
-- ✅ Phase 1: API Gateway with routing
-- ✅ Phase 2: Authentication (JWT + middleware)
+- ✅ Phase 1: API Gateway
+- ✅ Phase 2: Authentication (JWT)
+- ✅ Phase 2.5: PostgreSQL + Prisma (Dockerized)
 - ⏳ Phase 3: Rate Limiting (Redis)
 
 ---
