@@ -1,13 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const prisma = require('./db/prisma')
 
 const app = express();
 app.use(express.json());
 
-//in-memory store
-const users = []
 
 //signup
 app.post('/register', async(req, res) => {
@@ -17,11 +16,13 @@ app.post('/register', async(req, res) => {
         return res.status(400).json({ error: "Username and Password required" });
     }
     if(password.length < 6){ 
-        return res.status(400).json({ error: "Password must be greater than 6 character" });
+        return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
     //Validation
-    const existingUser = users.find(u => u.username === username);
+    const existingUser = await prisma.user.findUnique({
+        where: { username },
+    })
     if(existingUser){
         return res.status(400).json({ error: "User Already Exists" });
     }
@@ -30,9 +31,14 @@ app.post('/register', async(req, res) => {
     const hashed = await bcrypt.hash(password, 10);
 
     //storing user
-    users.push({ username, password: hashed });
+    await prisma.user.create({
+        data: {
+            username,
+            password: hashed,
+        },
+    })
 
-    res.json({ message: "User registered" });
+    res.status(201).json({ message: "User registered" });
 });
 
 app.post('/login', async(req, res) => {
@@ -43,7 +49,9 @@ app.post('/login', async(req, res) => {
             return res.status(400).json({ error: "Username and Password required" });
         }
         
-        const user = users.find(u => u.username === username);
+        const user = await prisma.user.findUnique({
+            where: { username },
+        });
         if(!user) return res.status(401).json({ error: "Invalid Credentials" });
 
         const valid = await bcrypt.compare(password, user.password);
