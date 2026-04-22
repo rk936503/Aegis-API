@@ -1,10 +1,10 @@
-# 🛡️ Aegis API
+# Aegis API
 
 ### A Distributed Gateway for Authentication, Rate Limiting, and Intelligent Routing
 
 ---
 
-## 🚀 Overview
+## Overview
 
 **Aegis API** is a production-inspired API Gateway built with Node.js that acts as a centralized entry point for microservices. It handles authentication, rate limiting, and intelligent request routing while ensuring scalability, security, and performance.
 
@@ -12,20 +12,20 @@ This project demonstrates real-world backend engineering concepts used in modern
 
 ---
 
-## ✨ Features
+## Features
 
-* 🔐 **JWT Authentication** (Access + Refresh Tokens)
-* ⚙️ **API Gateway Routing** (Single entry point for services)
-* 🚦 **Distributed Rate Limiting** using Redis
-* 📊 **Request Logging & Monitoring**
-* 🔁 **Path Rewriting & Service Mapping**
-* ⚡ **Caching Layer (Redis)**
-* 🧵 **Asynchronous Job Processing**
-* 🛑 **Circuit Breaker for Fault Tolerance**
+ **JWT Authentication** (Access + Refresh Tokens)
+ **API Gateway Routing** (Single entry point for services)
+ **Distributed Rate Limiting** using Redis
+ **Request Logging & Monitoring**
+ **Path Rewriting & Service Mapping**
+ **Caching Layer (Redis)**
+ **Asynchronous Job Processing**
+ **Circuit Breaker for Fault Tolerance**
 
 ---
 
-## 🚧 Progress
+## Progress
 
 - ✅ Phase 1: API Gateway
 - ✅ Phase 2: Authentication (JWT)
@@ -34,7 +34,7 @@ This project demonstrates real-world backend engineering concepts used in modern
 
 ---
 
-## 🧠 Architecture
+## Architecture
 
 Client → API Gateway → Auth → Rate Limiter → Service Routing → Response
 
@@ -45,7 +45,7 @@ Client → API Gateway → Auth → Rate Limiter → Service Routing → Respons
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
 * **Backend:** Node.js (Express)
 * **Cache & Rate Limiting:** Redis
@@ -56,7 +56,7 @@ Client → API Gateway → Auth → Rate Limiter → Service Routing → Respons
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 aegis-api/
@@ -77,23 +77,23 @@ aegis-api/
 
 ---
 
-## ⚙️ Getting Started
+## Getting Started
 
-### 1️⃣ Clone the repository
+### 1️ Clone the repository
 
 ```bash
 git clone https://github.com/your-username/aegis-api.git
 cd aegis-api
 ```
 
-### 2️⃣ Install dependencies
+### 2️ Install dependencies
 
 ```bash
 cd api-gateway
 npm install
 ```
 
-### 3️⃣ Setup environment variables
+### 3️ Setup environment variables
 
 Create a `.env` file:
 
@@ -103,7 +103,7 @@ JWT_SECRET=your_secret_key
 REDIS_URL=redis://localhost:6379
 ```
 
-### 4️⃣ Start services
+### 4️ Start services
 
 ```bash
 # Start gateway
@@ -114,7 +114,7 @@ node src/app.js
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Endpoint         | Description             |
 | ---------------- | ----------------------- |
@@ -125,7 +125,7 @@ node src/app.js
 
 ---
 
-## 📊 Example Flow
+## Example Flow
 
 1. Client sends request → `/api/users`
 2. Gateway verifies JWT
@@ -135,7 +135,7 @@ node src/app.js
 
 ---
 
-## ⚡ Key Decisions
+## Key Decisions
 
 * **Redis for rate limiting** → Fast in-memory operations
 * **JWT for authentication** → Stateless & scalable
@@ -144,7 +144,7 @@ node src/app.js
 
 ---
 
-## ⚠️ Challenges Solved
+## Challenges Solved
 
 * Handling high request throughput
 * Preventing API abuse using rate limiting
@@ -153,7 +153,7 @@ node src/app.js
 
 ---
 
-## 🚀 Future Improvements
+## Future Improvements
 
 * Kubernetes deployment
 * Distributed tracing (Jaeger)
@@ -163,24 +163,24 @@ node src/app.js
 
 ---
 
-## 📌 Resume Impact
+## Resume Impact
 
 > Built a distributed API Gateway handling authentication, rate limiting, and request routing using Node.js and Redis, demonstrating real-world microservices architecture and scalability concepts.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
 
 ---
 
-## 📜 License
+## License
 
 MIT License
 
 ---
 
-## ⭐ Final Note
+## Final Note
 
 This project focuses on **backend engineering depth**, system design, and real-world scalability challenges rather than just CRUD operations.
