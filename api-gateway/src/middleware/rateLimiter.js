@@ -6,17 +6,21 @@ module.exports = async(req, res, next) => {
     try {
         const ip = req.ip;
         const key = `rate_limit:${ip}`;
+        const now = Date.now();
 
-        const current = await redis.incr(key);
+        await redis.zremrangebyscore(key, 0, now - WINDOW_SIZE * 1000);
 
-        if(current === 1){
-            await redis.expire(key, WINDOW_SIZE);
-        }
-        if(current > MAX_REQUESTS){
+        const count = await redis.zcard(key);
+
+        if(count >= MAX_REQUESTS){
             return res.status(429).json({
-                errror: 'Too Many Requests, Please try again later.',
+                error: 'Too many requests. Try again later.',
             });
         }
+
+        await redis.zadd(key, now, now.toString());
+
+        await redis.expire(key, WINDOW_SIZE);
         
         next();
 
