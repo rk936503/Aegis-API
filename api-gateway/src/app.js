@@ -9,7 +9,6 @@ const rateLimiter = require('./middleware/rateLimiter');
 const app = express();
 const PORT = process.env.PORT;
 
-app.use(express.json());
 
 app.use(logger);
 app.use((err, req, res, next) => {
