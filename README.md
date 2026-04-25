@@ -25,13 +25,14 @@ This project demonstrates real-world backend engineering concepts used in modern
 
 ---
 
-## Progress
+## 🚧 Progress
 
-- ✅ Phase 1: API Gateway
-- ✅ Phase 2: Authentication (JWT)
-- ✅ Phase 2.5: PostgreSQL + Prisma (Dockerized)
-- ✅ Phase 3: Rate Limiting (Redis)
-- ⏳ Phase 4: Logging (Winston)
+- ✅ Phase 1: API Gateway (Routing + Proxy)
+- ✅ Phase 2: Authentication (JWT + Middleware)
+- ✅ Phase 2.5: PostgreSQL + Prisma (Dockerized DB)
+- ✅ Phase 3: Rate Limiting (Redis, Sliding Window)
+- ✅ Phase 4: Structured Logging (Winston + Request Tracing)
+- ⏳ Next: Monitoring & Metrics
 
 ---
 
