@@ -1,0 +1,5 @@
+{"level":"info","message":"Gateway running on port 5000","timestamp":"2026-04-25T20:18:20.247Z"}
+{"level":"info","message":"Gateway running on port 5000","timestamp":"2026-04-25T20:19:42.875Z"}
+{"level":"info","message":"Gateway running on port 5000","timestamp":"2026-04-25T21:04:43.506Z"}
+{"level":"info","message":{"duration":"43ms","ip":"::ffff:127.0.0.1","method":"GET","status":404,"url":"/"},"timestamp":"2026-04-25T21:08:13.848Z"}
+{"level":"info","message":{"duration":"22ms","ip":"::ffff:127.0.0.1","method":"GET","status":404,"url":"/"},"timestamp":"2026-04-25T21:08:17.057Z"}
