@@ -3,6 +3,10 @@ const WINDOW_SIZE = 60;
 const MAX_REQUESTS = 5;
 
 module.exports = async(req, res, next) => {
+    // SKIP monitoring endpoints
+    if (req.originalUrl === '/metrics' || req.originalUrl === '/health') {
+        return next();
+    }
     try {
         const ip = req.ip;
         const key = `rate_limit:${ip}`;

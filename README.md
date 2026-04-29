@@ -32,7 +32,7 @@ This project demonstrates real-world backend engineering concepts used in modern
 - ✅ Phase 2.5: PostgreSQL + Prisma (Dockerized DB)
 - ✅ Phase 3: Rate Limiting (Redis, Sliding Window)
 - ✅ Phase 4: Structured Logging (Winston + Request Tracing)
-- ⏳ Next: Monitoring & Metrics
+- ✅ Phase 5: Monitoring (Health Checks + Metrics)
 
 ---
 
