@@ -1,7 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 
-const loggerMiddleware = require('./middleware/logger')
+const loggerMiddleware = require('./middleware/logger');
+const metricsMiddleware = require('./middleware/metrics');
 const logger = require('./utils/logger');
 
 const { userServiceProxy, orderServiceProxy } = require('./routes/proxyRoutes');
@@ -15,12 +16,29 @@ const PORT = process.env.PORT;
 
 app.use(loggerMiddleware);
 
+app.use(metricsMiddleware);
+
 app.use(rateLimiter);
 
 app.use('/auth', authRoutes); //proxy to auth service
 
 app.use('/api/users', authMiddleware, userServiceProxy);
 app.use('/api/orders', authMiddleware, orderServiceProxy);
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    uptime: process.uptime(),
+    timestamp: new Date(),
+  });
+});
+
+const { client } = require('./utils/metrics');
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
 app.use((err, req, res, next) => {
   logger.error({
