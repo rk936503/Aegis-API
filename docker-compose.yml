@@ -1,38 +1,72 @@
 services:
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+      - postgres
+      - auth-service
+      - user-service
+      - order-service
+    environment:
+      - PORT=5000
+    restart: always
+
+  # Auth Service
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "5003:5003"
+    depends_on:
+      - postgres
+    env_file:
+      - ./auth-service/.env
+
+  # User Service
+  user-service:
+    build: ./user-service
+    ports:
+      - "5001:5001"
+
+  # Order Service
+  order-service:
+    build: ./order-service
+    ports:
+      - "5002:5002"
+
+  # PostgreSQL
   postgres:
     image: postgres:15
     container_name: aegis-postgres
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: aegis_auth
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
 
+  # Redis
   redis:
     image: redis:7
     container_name: aegis-redis
     ports:
       - "6379:6379"
 
+  # Prometheus
   prometheus:
     image: prom/prometheus
-    container_name: aegis-prometheus
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
+  # Grafana
   grafana:
     image: grafana/grafana
-    container_name: aegis-grafana
     ports:
       - "3000:3000"
     depends_on:
       - prometheus
-
-volumes:
-  postgres_data:
