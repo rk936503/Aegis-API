@@ -179,7 +179,7 @@ aegis-api/
 * Handled Docker networking (`localhost` vs service names)
 * Prevented Prometheus from being rate-limited
 * Resolved Prisma + Docker migration issues
-* Managed environment separation (local vs Docker)
+* Configured environment variables for Docker-based deployment
 
 ---
 
