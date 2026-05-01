@@ -1,13 +1,14 @@
 {
   "name": "order-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Order service for order management",
+  "main": "app.js",
   "scripts": {
-    "start": "node --watch app.js"
+    "start": "node app.js",
+    "dev": "node --watch app.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Rahul Kumar",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT;
 
 
-// app.use(loggerMiddleware);
+app.use(loggerMiddleware);
 
 app.use(metricsMiddleware);
 

@@ -1,13 +1,14 @@
 {
   "name": "user-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "User service for profile management",
+  "main": "app.js",
   "scripts": {
-    "start": "node --watch app.js"
+    "start": "node app.js",
+    "dev": "node --watch app.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Rahul Kumar",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
