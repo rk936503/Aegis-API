@@ -6,22 +6,23 @@
 
 ## Overview
 
-**Aegis API** is a production-inspired API Gateway built with Node.js that acts as a centralized entry point for microservices. It handles authentication, distributed rate limiting, request routing, logging, and monitoring.
+**Aegis API** is a production-inspired API Gateway built with Node.js that acts as a centralized entry point for microservices. It handles authentication, distributed rate limiting, intelligent request routing, logging, and monitoring.
 
-This project demonstrates **real-world backend architecture concepts** used in scalable systems, including API Gateway patterns, observability, and distributed control using Redis.
+This project demonstrates **real-world backend architecture concepts** such as API Gateway patterns, distributed systems, observability, and containerized microservices.
 
 ---
 
 ## Features
 
-*  **JWT Authentication** (Access + Refresh Tokens)
-*  **API Gateway Routing** (Single entry point for services)
-*  **Distributed Rate Limiting** using Redis (Sliding Window)
-*  **PostgreSQL Integration** with Prisma ORM (Dockerized)
-*  **Monitoring & Metrics** (Prometheus-compatible `/metrics`)
-*  **Structured Logging** (Winston with request tracing)
-*  **Path Rewriting & Service Mapping**
-*  **Dockerized Infrastructure** (Postgres, Redis, Prometheus)
+* **JWT Authentication** (Access + Refresh Tokens)
+* **API Gateway Routing** (Single entry point for services)
+* **Distributed Rate Limiting** using Redis (Sliding Window)
+* **PostgreSQL Integration** with Prisma ORM
+* **Monitoring & Metrics** (Prometheus + `/metrics`)
+* **Grafana Dashboards** (Traffic, latency, error rate)
+* **Structured Logging** (Winston with request tracing)
+* **Path Rewriting & Service Mapping**
+* **Fully Dockerized Microservices Architecture**
 
 ---
 
@@ -33,29 +34,84 @@ This project demonstrates **real-world backend architecture concepts** used in s
 * ✅ Phase 3: Rate Limiting (Redis, Sliding Window)
 * ✅ Phase 4: Structured Logging (Winston + Request Tracing)
 * ✅ Phase 5: Monitoring (Health Checks + Prometheus Metrics)
+* ✅ Phase 6: Full Dockerized Microservices Setup
 
 ---
 
 ## Architecture
 
-Client → API Gateway → Rate Limiter → Auth → Service Routing → Response
+Client → API Gateway → Rate Limiter (Redis) → Authentication (JWT) → Service Routing → Response
 
-* Gateway validates JWT tokens
-* Applies distributed rate limiting per IP
-* Routes request to appropriate microservice
-* Logs requests and exposes metrics for monitoring
+### Flow:
+
+* API Gateway acts as a centralized entry point
+* Redis enforces distributed rate limiting
+* Auth service validates JWT tokens
+* Requests are routed to independent microservices
+* Logs and metrics are captured for observability
 
 ---
 
 ## Tech Stack
 
 * **Backend:** Node.js (Express)
-* **Database:** PostgreSQL (Docker) + Prisma ORM
+* **Database:** PostgreSQL + Prisma ORM
 * **Cache & Rate Limiting:** Redis
 * **Authentication:** JWT + bcrypt
-* **Monitoring:** Prometheus (metrics scraping)
-* **Logging:** Winston (structured logs)
-* **Containerization:** Docker
+* **Monitoring:** Prometheus
+* **Visualization:** Grafana
+* **Logging:** Winston
+* **Containerization:** Docker + Docker Compose
+
+---
+
+## Docker Setup
+
+The entire system is containerized using Docker Compose.
+
+### Services Included:
+
+* API Gateway
+* Auth Service
+* User Service
+* Order Service
+* PostgreSQL
+* Redis
+* Prometheus
+* Grafana
+
+### Run Everything:
+
+```bash
+docker-compose up --build
+```
+
+---
+
+## Access Services
+
+| Service     | URL                   |
+| ----------- | --------------------- |
+| API Gateway | http://localhost:5000 |
+| Grafana     | http://localhost:3000 |
+| Prometheus  | http://localhost:9090 |
+
+---
+
+## 📊 Observability
+
+The system includes a full monitoring stack:
+
+* Prometheus for metrics collection
+* Grafana dashboards for visualization
+
+### Metrics Tracked:
+
+* Total request count
+* Requests by route
+* Requests by status code
+
+This provides **real-time insight into system performance**.
 
 ---
 
@@ -83,63 +139,7 @@ aegis-api/
 
 ---
 
-## Getting Started
-
-### 1️ Clone the repository
-
-```bash
-git clone https://github.com/your-username/aegis-api.git
-cd aegis-api
-```
-
----
-
-### 2️ Start Infrastructure (Docker)
-
-```bash
-docker-compose up -d
-```
-
----
-
-### 3️ Install dependencies
-
-```bash
-cd api-gateway
-npm install
-```
-
----
-
-### 4️ Setup environment variables
-
-Create `.env`:
-
-```
-PORT=5000
-JWT_SECRET=your_secret_key
-JWT_REFRESH_SECRET=your_refresh_secret
-DATABASE_URL=postgresql://postgres:password@localhost:5432/aegis_auth
-REDIS_URL=redis://localhost:6379
-```
-
----
-
-### 5️⃣ Run Services
-
-```bash
-# API Gateway
-node src/app.js
-
-# Auth Service
-node app.js
-
-# Other services similarly
-```
-
----
-
-## 📡 API Endpoints
+## API Endpoints
 
 | Endpoint         | Description             |
 | ---------------- | ----------------------- |
@@ -159,33 +159,34 @@ node app.js
 3. JWT authentication is validated
 4. Request is routed to User Service
 5. Response is returned via Gateway
-6. Metrics & logs are recorded
+6. Logs and metrics are recorded
 
 ---
 
 ## Key Design Decisions
 
-* **Redis for rate limiting** → Fast, distributed control
-* **Sliding window algorithm** → Prevent burst abuse
-* **JWT authentication** → Stateless and scalable
 * **API Gateway pattern** → Centralized request handling
-* **Prometheus metrics** → Observability and monitoring
+* **JWT authentication** → Stateless and scalable
+* **Redis sliding window** → Accurate rate limiting under burst traffic
+* **Docker Compose** → Reproducible multi-service environment
+* **Prometheus + Grafana** → Observability and performance monitoring
 
 ---
 
 ## Challenges Solved
 
-* Handling request bursts using sliding window rate limiting
-* Avoiding double body parsing in proxy (fixed gateway issue)
-* Ensuring monitoring endpoints are not rate-limited
-* Designing scalable authentication with persistent storage
+* Fixed request body loss in proxy (Express middleware issue)
+* Handled Docker networking (`localhost` vs service names)
+* Prevented Prometheus from being rate-limited
+* Resolved Prisma + Docker migration issues
+* Managed environment separation (local vs Docker)
 
 ---
 
 ## Future Improvements
 
-* Grafana dashboards for visualization
-* User-based rate limiting (RBAC / tiers)
+* Grafana alerts & advanced dashboards
+* Role-based rate limiting (RBAC / API tiers)
 * Distributed tracing (Jaeger)
 * Kubernetes deployment
 * Circuit breaker implementation
@@ -194,7 +195,7 @@ node app.js
 
 ## Resume Impact
 
-> Built a distributed API Gateway with JWT authentication, Redis-based sliding window rate limiting, PostgreSQL persistence, and Prometheus monitoring, demonstrating real-world microservices architecture and observability.
+> Built a distributed API Gateway with JWT authentication, Redis-based sliding window rate limiting, PostgreSQL persistence using Prisma, and full observability using Prometheus and Grafana, all containerized with Docker Compose.
 
 ---
 
