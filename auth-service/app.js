@@ -10,7 +10,8 @@ app.use(express.json());
 
 //signup
 app.post('/register', async(req, res) => {
-    const {username, password} = req.body;
+    try {
+        const {username, password} = req.body;
 
     if(!username || !password){
         return res.status(400).json({ error: "Username and Password required" });
@@ -39,6 +40,10 @@ app.post('/register', async(req, res) => {
     })
 
     res.status(201).json({ message: "User registered" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
 app.post('/login', async(req, res) => {
