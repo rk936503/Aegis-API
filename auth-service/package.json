@@ -1,13 +1,14 @@
 {
   "name": "auth-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "JWT authentication service with Prisma + PostgreSQL",
+  "main": "app.js",
   "scripts": {
-    "start": "node --watch app.js"
+    "start": "node app.js",
+    "dev": "node --watch app.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Rahul Kumar",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -15,6 +16,7 @@
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.3",
     "prisma": "^5.22.0"
   }
