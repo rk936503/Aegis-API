@@ -7,6 +7,8 @@ RUN npm install
 
 COPY . .
 
+RUN npx prisma generate
+
 EXPOSE 5001
 
-CMD ["node", "app.js"]
+CMD ["sh", "-c", "npx prisma db push && node app.js"]
