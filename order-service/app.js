@@ -1,8 +1,26 @@
+require('dotenv').config();
 const express = require('express');
-const app = express();
+const orderRoutes = require('./routes/orderRoutes');
 
-app.get('/', (req, res) => {
-    res.json({ message: "Order Service Working" });
+const app = express();
+const PORT = process.env.PORT || 5002;
+
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        service: 'order-service',
+        uptime: process.uptime(),
+        timestamp: new Date(),
+    });
 });
 
-app.listen(5002, () => console.log('Order service on 5002'));
+app.use('/', orderRoutes);
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: "Internal Server Error" });
+});
+
+app.listen(PORT, () => console.log(`Order service running on port ${PORT}`));
