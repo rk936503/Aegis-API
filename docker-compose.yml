@@ -27,6 +27,7 @@ services:
       - redis
     env_file:
       - ./auth-service/.env
+    restart: on-failure
 
   # User Service
   user-service:
@@ -38,12 +39,19 @@ services:
       - postgres-init
     env_file:
       - ./user-service/.env
+    restart: on-failure
 
   # Order Service
   order-service:
     build: ./order-service
     ports:
       - "5002:5002"
+    depends_on:
+      - postgres
+      - postgres-init
+    env_file:
+      - ./order-service/.env
+    restart: on-failure
 
   # PostgreSQL
   postgres:
