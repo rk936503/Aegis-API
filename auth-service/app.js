@@ -6,6 +6,7 @@ const prisma = require('./db/prisma');
 const redis = require('./config/redis');
 
 const app = express();
+const PORT = process.env.PORT || 5003;
 app.use(express.json());
 
 
@@ -132,26 +133,32 @@ app.post('/refresh', async(req, res) => {
 
 app.post('/logout', async(req, res) => {
     try {
-        const { refreshToken } = req.body;
+        const { refreshToken, accessToken } = req.body;
 
         if(!refreshToken){
             return res.status(400).json({ error: "Refresh token required" });
         }
 
-        const decoded = jwt.decode(refreshToken);
-
-        if(!decoded || !decoded.exp){
-            return res.status(400).json({ error: "Invalid token" });
+        // Blacklist the refresh token
+        const decodedRefresh = jwt.decode(refreshToken);
+        if (decodedRefresh && decodedRefresh.exp) {
+            const refreshTTL = decodedRefresh.exp - Math.floor(Date.now() / 1000);
+            if (refreshTTL > 0) {
+                await redis.set(`blacklist:${refreshToken}`, 'true', 'EX', refreshTTL);
+            }
         }
 
-        // Calculate remaining TTL(time to live)
-        const now = Math.floor(Date.now() / 1000);
-        const ttl = decoded.exp - now;
-
-        if (ttl > 0) {
-            // Blacklist the token in Redis
-            await redis.set(`blacklist:${refreshToken}`, 'true', 'EX', ttl);
+        // Blacklist the access token (if provided)
+        if (accessToken) {
+            const decodedAccess = jwt.decode(accessToken);
+            if (decodedAccess && decodedAccess.exp) {
+                const accessTTL = decodedAccess.exp - Math.floor(Date.now() / 1000);
+                if (accessTTL > 0) {
+                    await redis.set(`blacklist:${accessToken}`, 'true', 'EX', accessTTL);
+                }
+            }
         }
+
         res.json({ message: "Logged out successfully" });
 
     } catch (err) {
@@ -160,4 +167,4 @@ app.post('/logout', async(req, res) => {
     }
 })
 
-app.listen(5003, () => console.log('Auth service running on 5003'));
+app.listen(PORT, () => console.log('Auth service running on 5003'));
