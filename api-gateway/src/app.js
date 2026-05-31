@@ -5,7 +5,7 @@ const loggerMiddleware = require('./middleware/logger');
 const metricsMiddleware = require('./middleware/metrics');
 const logger = require('./utils/logger');
 
-const { userServiceProxy, orderServiceProxy } = require('./routes/proxyRoutes');
+const { userServiceHandler, orderServiceHandler } = require('./routes/proxyRoutes');
 const authRoutes = require('./routes/authRoutes');
 const authMiddleware = require('./middleware/auth');
 const rateLimiter = require('./middleware/rateLimiter');
@@ -13,17 +13,12 @@ const rateLimiter = require('./middleware/rateLimiter');
 const app = express();
 const PORT = process.env.PORT;
 
-
+app.use(express.json());
 app.use(loggerMiddleware);
-
 app.use(metricsMiddleware);
 
-app.use(rateLimiter);
-
-app.use('/auth', authRoutes); //proxy to auth service
-
-app.use('/api/users', authMiddleware, userServiceProxy);
-app.use('/api/orders', authMiddleware, orderServiceProxy);
+// Public routes — no auth required
+app.use('/auth', authRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -40,13 +35,17 @@ app.get('/metrics', async (req, res) => {
   res.end(await client.register.metrics());
 });
 
+// Protected routes — auth then rate limiter then circuit-breaker proxy
+app.use('/api/users',  authMiddleware, rateLimiter, userServiceHandler);
+app.use('/api/orders', authMiddleware, rateLimiter, orderServiceHandler);
+
+// Global error handler
 app.use((err, req, res, next) => {
   logger.error({
     message: err.message,
     stack: err.stack,
     url: req.originalUrl,
   });
-
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
