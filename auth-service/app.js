@@ -167,4 +167,9 @@ app.post('/logout', async(req, res) => {
     }
 })
 
-app.listen(PORT, () => console.log('Auth service running on 5003'));
+// Only start the server when run directly — not when imported by tests
+if (require.main === module) {
+    app.listen(PORT, () => console.log('Auth service running on 5003'));
+}
+
+module.exports = app;
