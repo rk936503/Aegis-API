@@ -1,210 +1,228 @@
-# Aegis API
+# 🛡️ Aegis API
 
-### A Distributed API Gateway for Authentication, Rate Limiting, and Observability
-
----
-
-## Overview
-
-**Aegis API** is a production-inspired API Gateway built with Node.js that acts as a centralized entry point for microservices. It handles authentication, distributed rate limiting, intelligent request routing, logging, and monitoring.
-
-This project demonstrates **real-world backend architecture concepts** such as API Gateway patterns, distributed systems, observability, and containerized microservices.
-
----
-
-## Features
-
-* **JWT Authentication** (Access + Refresh Tokens)
-* **API Gateway Routing** (Single entry point for services)
-* **Distributed Rate Limiting** using Redis (Sliding Window)
-* **PostgreSQL Integration** with Prisma ORM
-* **Monitoring & Metrics** (Prometheus + `/metrics`)
-* **Grafana Dashboards** (Traffic, latency, error rate)
-* **Structured Logging** (Winston with request tracing)
-* **Path Rewriting & Service Mapping**
-* **Fully Dockerized Microservices Architecture**
-
----
-
-## Progress
-
-* ✅ Phase 1: API Gateway (Routing + Proxy)
-* ✅ Phase 2: Authentication (JWT + Middleware)
-* ✅ Phase 2.5: PostgreSQL + Prisma (Dockerized DB)
-* ✅ Phase 3: Rate Limiting (Redis, Sliding Window)
-* ✅ Phase 4: Structured Logging (Winston + Request Tracing)
-* ✅ Phase 5: Monitoring (Health Checks + Prometheus Metrics)
-* ✅ Phase 6: Full Dockerized Microservices Setup
-
----
+A production-grade microservices backend built with Node.js, featuring JWT authentication, distributed rate limiting, circuit breaking, and full observability.
 
 ## Architecture
 
-Client → API Gateway → Rate Limiter (Redis) → Authentication (JWT) → Service Routing → Response
+```
+                        ┌─────────────────────────────────────────┐
+                        │              API Gateway :5000           │
+                        │                                         │
+                        │  Auth → Rate Limiter → Circuit Breaker  │
+                        └───────┬──────────┬──────────┬───────────┘
+                                │          │          │
+                    ┌───────────▼─┐  ┌─────▼──────┐  ┌▼────────────┐
+                    │ Auth Service│  │User Service│  │Order Service│
+                    │   :5003     │  │   :5001    │  │   :5002     │
+                    └──────┬──────┘  └─────┬──────┘  └──────┬──────┘
+                           │               │                 │
+                    ┌──────▼───────────────▼─────────────────▼──────┐
+                    │              PostgreSQL :5432                   │
+                    │   aegis_auth  |  aegis_users  |  aegis_orders  │
+                    └────────────────────────────────────────────────┘
+                    ┌──────────────────────┐  ┌───────────────────────┐
+                    │     Redis :6379      │  │  Prometheus + Grafana │
+                    │  Token Blacklist     │  │    :9090  |  :3000    │
+                    │  Rate Limit Windows  │  └───────────────────────┘
+                    └──────────────────────┘
+```
 
-### Flow:
+## Services
 
-* API Gateway acts as a centralized entry point
-* Redis enforces distributed rate limiting
-* Auth service validates JWT tokens
-* Requests are routed to independent microservices
-* Logs and metrics are captured for observability
+| Service | Port | Responsibility |
+|---------|------|----------------|
+| **API Gateway** | 5000 | Auth enforcement, rate limiting, circuit breaking, metrics |
+| **Auth Service** | 5003 | JWT issue/refresh/revoke, bcrypt password hashing |
+| **User Service** | 5001 | User profile CRUD |
+| **Order Service** | 5002 | Order lifecycle management with state machine |
+| **PostgreSQL** | 5432 | Persistent storage (3 separate databases) |
+| **Redis** | 6379 | Token blacklisting, distributed rate limiting |
+| **Prometheus** | 9090 | Metrics scraping |
+| **Grafana** | 3000 | Metrics dashboards |
 
----
+## Key Features
 
-## Tech Stack
+- **JWT Authentication** — access + refresh token pair, stateful logout via Redis blacklist
+- **Distributed Rate Limiting** — sliding window algorithm via Redis, role-aware limits (admin/premium/user)
+- **Circuit Breaker** — opossum-based per-service circuit breakers with Prometheus state tracking
+- **Observability** — request counter, latency histogram, circuit breaker gauge, rate limit counter
+- **Order State Machine** — strict `PENDING → CONFIRMED → SHIPPED → DELIVERED` transitions
+- **Multi-stage Docker builds** — node:20-alpine, ~200MB images vs ~1.1GB
+- **Health checks** — postgres and redis readiness gates for deterministic startup order
 
-* **Backend:** Node.js (Express)
-* **Database:** PostgreSQL + Prisma ORM
-* **Cache & Rate Limiting:** Redis
-* **Authentication:** JWT + bcrypt
-* **Monitoring:** Prometheus
-* **Visualization:** Grafana
-* **Logging:** Winston
-* **Containerization:** Docker + Docker Compose
+## Quick Start
 
----
+### Prerequisites
+- Docker Desktop
+- Node.js 20+ (for local dev)
 
-## Docker Setup
+### 1. Clone and configure
 
-The entire system is containerized using Docker Compose.
+```bash
+git clone https://github.com/rk936503/aegis-api.git
+cd aegis-api
+```
 
-### Services Included:
+Copy the example env files and fill in your secrets:
 
-* API Gateway
-* Auth Service
-* User Service
-* Order Service
-* PostgreSQL
-* Redis
-* Prometheus
-* Grafana
+```bash
+cp api-gateway/.env.example   api-gateway/.env
+cp auth-service/.env.example  auth-service/.env
+cp user-service/.env.example  user-service/.env
+cp order-service/.env.example order-service/.env
+```
 
-### Run Everything:
+### 2. Start everything
 
 ```bash
 docker-compose up --build
 ```
 
----
+All services start in dependency order — postgres and redis health checks gate the microservices, which gate the API gateway.
 
-## Access Services
+### 3. Verify
 
-| Service     | URL                   |
-| ----------- | --------------------- |
-| API Gateway | http://localhost:5000 |
-| Grafana     | http://localhost:3000 |
-| Prometheus  | http://localhost:9090 |
+```bash
+curl http://localhost:5000/health
+```
 
----
+## API Reference
 
-## 📊 Observability
+All protected routes require `Authorization: Bearer <accessToken>`.
 
-The system includes a full monitoring stack:
+### Auth (`/auth`)
 
-* Prometheus for metrics collection
-* Grafana dashboards for visualization
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/auth/register` | ✗ | Register a new user |
+| POST | `/auth/login` | ✗ | Login, receive access + refresh tokens |
+| POST | `/auth/refresh` | ✗ | Exchange refresh token for new access token |
+| POST | `/auth/logout` | ✗ | Blacklist refresh token |
 
-### Metrics Tracked:
+### Users (`/api/users`)
 
-* Total request count
-* Requests by route
-* Requests by status code
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/users/profile` | ✓ | Get current user's profile |
+| PATCH | `/api/users/profile` | ✓ | Update profile fields |
 
-This provides **real-time insight into system performance**.
+### Orders (`/api/orders`)
 
----
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/orders` | ✓ | Create order (`productName`, `quantity`, `price`) |
+| GET | `/api/orders?page=1&limit=10` | ✓ | List orders (paginated) |
+| GET | `/api/orders/:id` | ✓ | Get single order |
+| PATCH | `/api/orders/:id/status` | ✓ | Advance status (state machine) |
+| DELETE | `/api/orders/:id` | ✓ | Soft cancel (sets status to CANCELLED) |
+
+**Order status transitions:**
+```
+PENDING → CONFIRMED → SHIPPED → DELIVERED
+    └──────────────────────────────→ CANCELLED (any state)
+```
+
+## Rate Limiting
+
+Every response includes standard rate limit headers:
+
+```
+X-RateLimit-Limit:     10
+X-RateLimit-Remaining: 9
+X-RateLimit-Reset:     1748867200
+```
+
+Role-based limits per 60-second window:
+
+| Role | Limit |
+|------|-------|
+| admin | 100 req/min |
+| premium | 50 req/min |
+| user | 10 req/min |
+| unauthenticated | 5 req/min |
+
+## Circuit Breaker
+
+Each downstream service (user-service, order-service) is wrapped in an opossum circuit breaker:
+
+- **Closed** → normal operation
+- **Open** → instant `503 Service Unavailable` (no downstream call)
+- **Half-Open** → single test request after 10s reset timeout
+
+Circuit state is tracked in Prometheus as `circuit_breaker_state{service="..."}`.
+
+## Observability
+
+```bash
+# Prometheus metrics
+curl http://localhost:5000/metrics
+
+# Key metrics
+http_requests_total{method, route, status}
+http_request_duration_seconds{method, route, status}
+circuit_breaker_state{service}
+rate_limited_requests_total{ip}
+```
+
+Open Grafana at `http://localhost:3000` and add Prometheus as a data source (`http://prometheus:9090`).
+
+## Running Tests
+
+**Auth Service** (requires Docker postgres + redis running):
+
+```bash
+cd auth-service
+npm test
+```
+
+**API Gateway** (fully mocked — no external deps):
+
+```bash
+cd api-gateway
+npm test
+```
+
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| auth-service | 13 | 78% |
+| api-gateway | 7 | 93% |
 
 ## Project Structure
 
 ```
 aegis-api/
-│
 ├── api-gateway/
 │   ├── src/
-│   │   ├── routes/
-│   │   ├── middleware/
-│   │   ├── config/
-│   │   ├── utils/
+│   │   ├── config/          # Redis client
+│   │   ├── middleware/       # auth, rateLimiter, logger, metrics
+│   │   ├── routes/           # authRoutes, proxyRoutes
+│   │   ├── utils/            # circuitBreaker, logger, metrics
 │   │   └── app.js
-│
+│   └── __tests__/
 ├── auth-service/
+│   ├── config/               # Redis client
+│   ├── db/                   # Prisma client
+│   ├── prisma/               # Schema + migrations
+│   ├── app.js
+│   └── __tests__/
 ├── user-service/
 ├── order-service/
-│
 ├── docker-compose.yml
-├── prometheus.yml
-└── README.md
+└── prometheus.yml
 ```
 
----
+## Tech Stack
 
-## API Endpoints
-
-| Endpoint         | Description             |
-| ---------------- | ----------------------- |
-| `/api/users`     | Routes to User Service  |
-| `/api/orders`    | Routes to Order Service |
-| `/auth/login`    | User login              |
-| `/auth/register` | User signup             |
-| `/health`        | Health check endpoint   |
-| `/metrics`       | Prometheus metrics      |
-
----
-
-## Example Flow
-
-1. Client sends request → `/api/users`
-2. Gateway applies rate limiting (Redis)
-3. JWT authentication is validated
-4. Request is routed to User Service
-5. Response is returned via Gateway
-6. Logs and metrics are recorded
-
----
-
-## Key Design Decisions
-
-* **API Gateway pattern** → Centralized request handling
-* **JWT authentication** → Stateless and scalable
-* **Redis sliding window** → Accurate rate limiting under burst traffic
-* **Docker Compose** → Reproducible multi-service environment
-* **Prometheus + Grafana** → Observability and performance monitoring
-
----
-
-## Challenges Solved
-
-* Fixed request body loss in proxy (Express middleware issue)
-* Handled Docker networking (`localhost` vs service names)
-* Prevented Prometheus from being rate-limited
-* Resolved Prisma + Docker migration issues
-* Configured environment variables for Docker-based deployment
-
----
-
-## Future Improvements
-
-* Grafana alerts & advanced dashboards
-* Role-based rate limiting (RBAC / API tiers)
-* Distributed tracing (Jaeger)
-* Kubernetes deployment
-* Circuit breaker implementation
-
----
-
-## Resume Impact
-
-> Built a distributed API Gateway with JWT authentication, Redis-based sliding window rate limiting, PostgreSQL persistence using Prisma, and full observability using Prometheus and Grafana, all containerized with Docker Compose.
-
----
-
-## License
-
-MIT License
-
----
-
-## Final Note
-
-This project focuses on **backend engineering depth, system design, and real-world scalability challenges** rather than basic CRUD operations.
+| Layer | Technology |
+|-------|-----------|
+| Runtime | Node.js 20 |
+| Framework | Express 5 |
+| ORM | Prisma 5 |
+| Database | PostgreSQL 15 |
+| Cache / Queue | Redis 7 (ioredis) |
+| Auth | JWT (jsonwebtoken) + bcrypt |
+| Circuit Breaker | opossum |
+| Metrics | prom-client + Prometheus + Grafana |
+| Logging | Winston (JSON structured logs) |
+| Testing | Jest + Supertest + ioredis-mock |
+| Containers | Docker + Docker Compose |

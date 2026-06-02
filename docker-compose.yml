@@ -1,59 +1,66 @@
 services:
 
-  # API Gateway
+  # ── API Gateway ─────────────────────────────────────────────────────────────
   api-gateway:
     build: ./api-gateway
     ports:
       - "5000:5000"
     depends_on:
-      - redis
-      - postgres
-      - auth-service
-      - user-service
-      - order-service
-    environment:
-      - PORT=5000
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      order-service:
+        condition: service_started
     env_file:
       - ./api-gateway/.env
     restart: always
 
-  # Auth Service
+  # ── Auth Service ─────────────────────────────────────────────────────────────
   auth-service:
     build: ./auth-service
     ports:
       - "5003:5003"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - ./auth-service/.env
     restart: on-failure
 
-  # User Service
+  # ── User Service ─────────────────────────────────────────────────────────────
   user-service:
     build: ./user-service
     ports:
       - "5001:5001"
     depends_on:
-      - postgres
-      - postgres-init
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_completed_successfully
     env_file:
       - ./user-service/.env
     restart: on-failure
 
-  # Order Service
+  # ── Order Service ────────────────────────────────────────────────────────────
   order-service:
     build: ./order-service
     ports:
       - "5002:5002"
     depends_on:
-      - postgres
-      - postgres-init
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_completed_successfully
     env_file:
       - ./order-service/.env
     restart: on-failure
 
-  # PostgreSQL
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
   postgres:
     image: postgres:15
     container_name: aegis-postgres
@@ -63,38 +70,52 @@ services:
       POSTGRES_DB: aegis_auth
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-# Initialize additional databases
+  # ── PostgreSQL DB Initializer ─────────────────────────────────────────────────
   postgres-init:
     image: postgres:15
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       PGPASSWORD: password
     entrypoint: >
       sh -c "
-        until pg_isready -h postgres -U postgres; do sleep 1; done;
         psql -h postgres -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'aegis_users'\" | grep -q 1 || psql -h postgres -U postgres -c 'CREATE DATABASE aegis_users';
         psql -h postgres -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'aegis_orders'\" | grep -q 1 || psql -h postgres -U postgres -c 'CREATE DATABASE aegis_orders';
       "
     restart: "no"
 
-  # Redis
+  # ── Redis ────────────────────────────────────────────────────────────────────
   redis:
     image: redis:7
     container_name: aegis-redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
-  # Prometheus
+  # ── Prometheus ───────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - api-gateway
 
-  # Grafana
+  # ── Grafana ──────────────────────────────────────────────────────────────────
   grafana:
     image: grafana/grafana
     ports:
