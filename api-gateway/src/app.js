@@ -17,8 +17,8 @@ app.use(express.json());
 app.use(loggerMiddleware);
 app.use(metricsMiddleware);
 
-// Public routes — no auth required
-app.use('/auth', authRoutes);
+// Public routes — IP-based rate limiting only (no auth)
+app.use('/auth', rateLimiter, authRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({
