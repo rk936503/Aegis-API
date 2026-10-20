@@ -1,0 +1,46 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: aegis
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+
+  # On t2.micro: keep max at 3 to avoid OOMKill on the single node
+  # In production with multiple nodes: increase maxReplicas
+  minReplicas: 1
+  maxReplicas: 3
+
+  metrics:
+    # ── CPU-based scaling ──────────────────────────────────────────
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60  # Scale up when avg CPU > 60%
+
+    # ── Memory-based scaling ───────────────────────────────────────
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80  # Scale up when avg memory > 80%
+
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30   # Wait 30s before scaling up again
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30            # Add 1 pod every 30s max
+    scaleDown:
+      stabilizationWindowSeconds: 120  # Wait 2 min before scaling down
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60            # Remove 1 pod per minute max

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: aegis
+  labels:
+    app: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: DOCKERHUB_USERNAME/aegis-api-gateway:latest  # replaced by CI/CD
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: USER_SERVICE
+              value: http://user-service:5001
+            - name: ORDER_SERVICE
+              value: http://order-service:5002
+            - name: AUTH_SERVICE
+              value: http://auth-service:5003
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: aegis-secrets
+                  key: JWT_SECRET
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: aegis-secrets
+                  key: JWT_REFRESH_SECRET
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"    # HPA scales on CPU — give it room to spike
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3

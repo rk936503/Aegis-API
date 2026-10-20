@@ -1,0 +1,22 @@
+# AWS Deployment Configuration
+# Copy this file to terraform.tfvars and customize:
+#   cp terraform.tfvars.example terraform.tfvars
+
+aws_region       = "us-east-1"
+
+# Recommended: t3.small (2 vCPU, 2GB RAM)
+# Cost: ~$0.021/hr = ~$14.00 for 28 days (well under your $116 credit).
+# If you prefer strict free-tier: "t3.micro" (1 vCPU, 1GB RAM) — but 1GB is very tight for k3s + 4 services.
+instance_type    = "t3.small"
+
+# Path to your SSH public key
+public_key_path  = "~/.ssh/id_rsa.pub"
+
+# Restrict SSH and k3s access to your IP address (recommended)
+# Find your IP at https://checkip.amazonaws.com
+# Example: "203.0.113.45/32"
+allowed_ssh_cidr = "0.0.0.0/0"
+
+# In-cluster PostgreSQL pod is enabled by default in k8s (costs $0 extra).
+# Set enable_rds to true only if you want AWS RDS PostgreSQL.
+enable_rds       = false
