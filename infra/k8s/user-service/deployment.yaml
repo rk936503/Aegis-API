@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: DOCKERHUB_USERNAME/aegis-user-service:latest
+          image: rk936503/aegis-user-service:latest
+
           ports:
             - containerPort: 5001
           env:

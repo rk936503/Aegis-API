@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: DOCKERHUB_USERNAME/aegis-auth-service:latest  # replaced by CI/CD
+          image: rk936503/aegis-auth-service:latest  # replaced by CI/CD
           ports:
             - containerPort: 5003
           env:

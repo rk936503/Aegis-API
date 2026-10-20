@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: DOCKERHUB_USERNAME/aegis-order-service:latest
+          image: rk936503/aegis-order-service:latest
+
           ports:
             - containerPort: 5002
           env:
