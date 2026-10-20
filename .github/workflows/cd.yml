@@ -81,6 +81,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ── Deploy to k3s on EC2 ────────────────────────────────────────────────────
+  # ── Deploy to k3s on EC2 ────────────────────────────────────────────────────
   deploy:
     name: Deploy to k3s
     runs-on: ubuntu-latest
@@ -89,72 +90,60 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: "v1.28.0"
-
-      # Fetch kubeconfig from EC2, replace 127.0.0.1 with the real EC2 IP
-      - name: Set up kubeconfig
+      - name: Deploy manifests and rollout images on EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          TAG: ${{ needs.build-push.outputs.image_tag }}
+          DOCKERHUB_USERNAME: ${{ env.DOCKERHUB_USERNAME }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
-          mkdir -p ~/.kube
-          ssh -i <(echo "${{ secrets.EC2_SSH_KEY }}") \
-              -o StrictHostKeyChecking=no \
-              ec2-user@${{ secrets.EC2_HOST }} \
-              'sudo cat /etc/rancher/k3s/k3s.yaml' \
-          | sed "s/127.0.0.1/${{ secrets.EC2_HOST }}/g" \
-          > ~/.kube/config
-          chmod 600 ~/.kube/config
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-      # Create / update aegis-secrets from GitHub Secrets
-      - name: Apply Kubernetes secrets
-        run: |
-          kubectl create secret generic aegis-secrets \
-            --namespace=aegis \
-            --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            --from-literal=JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" \
-            --from-literal=POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
-            --dry-run=client -o yaml | kubectl apply -f -
+          # Copy k8s manifests to EC2 node
+          scp -r infra/k8s ec2-user@$EC2_HOST:~/k8s
 
-      # Apply all manifests (namespace first, then infra, then services)
-      - name: Apply Kubernetes manifests
-        run: |
-          kubectl apply -f infra/k8s/00-namespace.yaml
-          kubectl apply -f infra/k8s/postgres/
-          kubectl apply -f infra/k8s/redis/
-          kubectl apply -f infra/k8s/auth-service/
-          kubectl apply -f infra/k8s/user-service/
-          kubectl apply -f infra/k8s/order-service/
-          kubectl apply -f infra/k8s/api-gateway/
+          # Execute rollout directly on the k3s node
+          ssh ec2-user@$EC2_HOST "bash -s" << EOF
+            set -e
 
-      # Update deployments with the exact image SHA — triggers rolling update
-      - name: Roll out new images
-        run: |
-          TAG=${{ needs.build-push.outputs.image_tag }}
+            # 1. Apply secrets
+            kubectl create secret generic aegis-secrets \
+              --namespace=aegis \
+              --from-literal=JWT_SECRET='$JWT_SECRET' \
+              --from-literal=JWT_REFRESH_SECRET='$JWT_REFRESH_SECRET' \
+              --from-literal=POSTGRES_PASSWORD='$POSTGRES_PASSWORD' \
+              --dry-run=client -o yaml | kubectl apply -f -
 
-          kubectl set image deployment/api-gateway \
-            api-gateway=${{ env.DOCKERHUB_USERNAME }}/aegis-api-gateway:$TAG \
-            -n aegis
+            # 2. Apply all Kubernetes manifests
+            kubectl apply -f ~/k8s/00-namespace.yaml
+            kubectl apply -f ~/k8s/postgres/
+            kubectl apply -f ~/k8s/redis/
+            kubectl apply -f ~/k8s/auth-service/
+            kubectl apply -f ~/k8s/user-service/
+            kubectl apply -f ~/k8s/order-service/
+            kubectl apply -f ~/k8s/api-gateway/
 
-          kubectl set image deployment/auth-service \
-            auth-service=${{ env.DOCKERHUB_USERNAME }}/aegis-auth-service:$TAG \
-            -n aegis
+            # 3. Roll out new images
+            kubectl set image deployment/api-gateway api-gateway=$DOCKERHUB_USERNAME/aegis-api-gateway:$TAG -n aegis
+            kubectl set image deployment/auth-service auth-service=$DOCKERHUB_USERNAME/aegis-auth-service:$TAG -n aegis
+            kubectl set image deployment/user-service user-service=$DOCKERHUB_USERNAME/aegis-user-service:$TAG -n aegis
+            kubectl set image deployment/order-service order-service=$DOCKERHUB_USERNAME/aegis-order-service:$TAG -n aegis
 
-          kubectl set image deployment/user-service \
-            user-service=${{ env.DOCKERHUB_USERNAME }}/aegis-user-service:$TAG \
-            -n aegis
+            # 4. Wait for all rollouts to complete
+            kubectl rollout status deployment/api-gateway   -n aegis --timeout=180s
+            kubectl rollout status deployment/auth-service  -n aegis --timeout=180s
+            kubectl rollout status deployment/user-service  -n aegis --timeout=180s
+            kubectl rollout status deployment/order-service -n aegis --timeout=180s
 
-          kubectl set image deployment/order-service \
-            order-service=${{ env.DOCKERHUB_USERNAME }}/aegis-order-service:$TAG \
-            -n aegis
+            # 5. Output cluster state
+            echo "=== HPA Status ==="
+            kubectl get hpa -n aegis
+            echo "=== Pods Status ==="
+            kubectl get pods -n aegis
+          EOF
 
-      # Wait for all rollouts to complete
-      - name: Wait for rollouts
-        run: |
-          kubectl rollout status deployment/api-gateway   -n aegis --timeout=120s
-          kubectl rollout status deployment/auth-service  -n aegis --timeout=120s
-          kubectl rollout status deployment/user-service  -n aegis --timeout=120s
-          kubectl rollout status deployment/order-service -n aegis --timeout=120s
-
-      - name: Verify HPA status
-        run: kubectl get hpa -n aegis
