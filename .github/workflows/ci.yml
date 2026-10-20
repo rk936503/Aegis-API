@@ -21,7 +21,7 @@ jobs:
           cache-dependency-path: api-gateway/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         working-directory: api-gateway
 
       - name: Run tests
@@ -63,14 +63,18 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: auth-service/package-lock.json
+          cache-dependency-path: auth-service/package.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+        working-directory: auth-service
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
         working-directory: auth-service
 
       - name: Apply Prisma schema
-        run: npx prisma db push --skip-generate
+        run: npx prisma db push
         working-directory: auth-service
         env:
           DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/aegis_auth
