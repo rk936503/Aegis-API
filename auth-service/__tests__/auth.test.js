@@ -1,10 +1,10 @@
 // ─── Environment overrides — must happen before any module loads ──────────────
-// dotenv.config() in app.js will NOT override vars already set here
-// (dotenv never overwrites existing process.env values by default)
-process.env.DATABASE_URL  = 'postgresql://postgres:password@localhost:5432/aegis_auth';
-process.env.REDIS_URL     = 'redis://localhost:6379';
-process.env.JWT_SECRET    = 'supersecret';
-process.env.JWT_REFRESH_SECRET = 'refreshsecret';
+// Use existing process.env if provided (e.g. by CI), otherwise fall back to local defaults
+process.env.DATABASE_URL       = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/aegis_auth';
+process.env.REDIS_URL          = process.env.REDIS_URL || 'redis://localhost:6379';
+process.env.JWT_SECRET         = process.env.JWT_SECRET || 'supersecret';
+process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'refreshsecret';
+
 
 // Mock ioredis with an in-memory implementation — no real Redis needed for tests
 jest.mock('ioredis', () => require('ioredis-mock'));
