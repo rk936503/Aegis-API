@@ -22,13 +22,14 @@ spec:
           env:
             - name: PORT
               value: "5002"
-            - name: DATABASE_URL
-              value: postgresql://postgres:$(POSTGRES_PASSWORD)@postgres:5432/aegis_orders
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: aegis-secrets
                   key: POSTGRES_PASSWORD
+            - name: DATABASE_URL
+              value: postgresql://postgres:$(POSTGRES_PASSWORD)@postgres:5432/aegis_orders
+
           resources:
             requests:
               memory: "64Mi"
