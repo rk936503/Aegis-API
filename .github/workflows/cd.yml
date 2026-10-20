@@ -104,8 +104,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-          # Copy k8s manifests to EC2 node
+          # Clean destination and copy fresh k8s manifests to EC2 node
+          ssh ec2-user@$EC2_HOST "rm -rf ~/k8s"
           scp -r infra/k8s ec2-user@$EC2_HOST:~/k8s
+
 
           # Execute rollout directly on the k3s node
           ssh ec2-user@$EC2_HOST "bash -s" << EOF
